@@ -27,3 +27,7 @@
 .atMaxWordCount{
   color: red;
 }
+
+.invalidAttempt {
+  color: red;
+}

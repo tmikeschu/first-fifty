@@ -31,9 +31,10 @@ const App: Component = () => {
 
   const wordCount = createMemo(() => words().length);
   const uniqueWordCount = createMemo(() => uniqWords().length);
-  const atFifty = createMemo(() => uniqueWordCount() === 50);
+  const atFifty = createMemo(() => uniqueWordCount() > 50);
 
   const [isDisabled, setIsDisabled] = createSignal(false);
+  const [invalidAttempt, setInvalidAttempt] = createSignal("");
 
   return (
     <div class={styles.App}>
@@ -49,13 +50,34 @@ const App: Component = () => {
         disabled={isDisabled()}
         value={value()}
         onInput={(e) => {
-          setValue(e.currentTarget.value);
+          if (atFifty()) {
+            const lastWord = (e.currentTarget.value.split(" ").pop() ?? "")
+              .replace(/[^a-zA-Z' ]/g, "")
+              .toLowerCase();
+            if (!uniqWords().some((w) => w.startsWith(lastWord))) {
+              e.currentTarget.value = value();
+              setInvalidAttempt(lastWord);
+              e.currentTarget.blur();
+            } else {
+              setInvalidAttempt("");
+              setValue(e.currentTarget.value);
+            }
+          } else {
+            setInvalidAttempt("");
+            setValue(e.currentTarget.value);
+          }
           if (atMaxWordCount() && endsWithSpace()) {
             setIsDisabled(true);
             setValue((v) => v.trim());
           }
         }}
       />
+      {invalidAttempt() ? (
+        <p class={styles.invalidAttempt}>
+          <b>{invalidAttempt()}</b> doesn't match your first fifty words.
+        </p>
+      ) : null}
+
       <p classList={{ [styles.atMaxWordCount]: atMaxWordCount() }}>
         Words {wordCount()}/200
       </p>
