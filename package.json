@@ -20,6 +20,7 @@
     "@types/number-to-words": "^1.2.1",
     "number-to-words": "^1.2.4",
     "solid-js": "^1.6.10",
-    "solid-transition-group": "^0.2.0"
+    "solid-transition-group": "^0.2.0",
+    "ts-pattern": "^4.2.1"
   }
 }

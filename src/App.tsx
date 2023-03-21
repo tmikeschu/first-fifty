@@ -28,6 +28,7 @@ import {
   Flex,
 } from "@hope-ui/solid";
 import { toWords } from "number-to-words";
+import { match } from "ts-pattern";
 
 const App: Component = () => {
   const [value, setValue] = createSignal("");
@@ -55,7 +56,9 @@ const App: Component = () => {
 
   const wordCount = createMemo(() => words().length);
   const uniqueWordCount = createMemo(() => uniqWords().length);
-  const atFifty = createMemo(() => uniqueWordCount() > maxUniqueWords());
+  const overMaxUniqueWords = createMemo(
+    () => uniqueWordCount() > maxUniqueWords()
+  );
 
   const [isDisabled, setIsDisabled] = createSignal(false);
   const [invalidAttempt, setInvalidAttempt] = createSignal("");
@@ -142,7 +145,7 @@ const App: Component = () => {
                 setInvalidAttempt("");
                 setValue(e.currentTarget.value);
               };
-              if (atFifty()) {
+              if (overMaxUniqueWords()) {
                 const lastWord = (e.currentTarget.value.split(" ").pop() ?? "")
                   .replace(/[^a-zA-Z' ]/g, "")
                   .toLowerCase();
@@ -202,7 +205,17 @@ const App: Component = () => {
           <Heading
             as="h3"
             css={{
-              color: atFifty() ? "$warning10" : "$neutral12",
+              color: match(uniqueWordCount())
+                .with(0, () => "$neutral8")
+                .when(
+                  (x) => x === maxUniqueWords(),
+                  () => "$success10"
+                )
+                .when(
+                  (x) => x > maxUniqueWords(),
+                  () => "$warning10"
+                )
+                .otherwise(() => "$neutral11"),
             }}
           >
             Unique Words ({uniqueWordCount()})
