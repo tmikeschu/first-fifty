@@ -5,7 +5,6 @@ import {
   createSignal,
   For,
 } from "solid-js";
-
 import {
   FormControl,
   FormHelperText,
@@ -28,6 +27,7 @@ import {
   Stack,
   Flex,
 } from "@hope-ui/solid";
+import { toWords } from "number-to-words";
 
 const App: Component = () => {
   const [value, setValue] = createSignal("");
@@ -44,6 +44,7 @@ const App: Component = () => {
       .split(" ")
       .filter(Boolean);
   });
+  const overMaxWordCount = createMemo(() => words().length > maxWords());
   const atMaxWordCount = createMemo(() => words().length === maxWords());
   const endsWithSpace = createMemo(() => value().match(/(\s|\n)$/));
 
@@ -66,9 +67,9 @@ const App: Component = () => {
         maxW: "640px",
         w: "100%",
         py: "16px",
-        px: "$2",
+        px: "$4",
         "@md": {
-          px: "$4",
+          px: "$8",
         },
       }}
     >
@@ -86,11 +87,18 @@ const App: Component = () => {
               color: "$primary10",
             }}
           >
-            First Fifty
+            First {capitalize(toWords(maxUniqueWords()))}
           </Heading>
-          <Text size="sm" css={{ color: "$neutral9" }}>
-            Write <b>{maxWords()}</b> words, using the first{" "}
-            <b>{maxUniqueWords()}</b> words you write.
+          <Text size="sm" css={{ color: "$neutral11" }}>
+            Write{" "}
+            <Text as="b" css={{ color: "$primary10" }}>
+              {maxWords()}
+            </Text>{" "}
+            words, using the first{" "}
+            <Text as="b" css={{ color: "$primary10" }}>
+              {maxUniqueWords()}
+            </Text>{" "}
+            words you write.
           </Text>
         </VStack>
 
@@ -121,7 +129,7 @@ const App: Component = () => {
         <FormControl>
           <Textarea
             css={{
-              h: "320px",
+              height: "$sm",
               px: "8px",
               py: "4px",
               resize: "none",
@@ -130,6 +138,10 @@ const App: Component = () => {
             disabled={isDisabled()}
             value={value()}
             onInput={(e) => {
+              const defaultHandler = () => {
+                setInvalidAttempt("");
+                setValue(e.currentTarget.value);
+              };
               if (atFifty()) {
                 const lastWord = (e.currentTarget.value.split(" ").pop() ?? "")
                   .replace(/[^a-zA-Z' ]/g, "")
@@ -139,14 +151,13 @@ const App: Component = () => {
                   setInvalidAttempt(lastWord);
                   e.currentTarget.blur();
                 } else {
-                  setInvalidAttempt("");
-                  setValue(e.currentTarget.value);
+                  defaultHandler();
                 }
               } else {
-                setInvalidAttempt("");
-                setValue(e.currentTarget.value);
+                defaultHandler();
               }
-              if (atMaxWordCount() && endsWithSpace()) {
+
+              if (overMaxWordCount() || (atMaxWordCount() && endsWithSpace())) {
                 setIsDisabled(true);
                 setValue((v) => v.trim());
               }
@@ -155,7 +166,11 @@ const App: Component = () => {
           <Flex css={{ justifyContent: "flex-end", w: "$full" }}>
             <FormHelperText
               css={{
-                color: atMaxWordCount() ? "$success10" : undefined,
+                color: atMaxWordCount()
+                  ? "$success10"
+                  : overMaxWordCount()
+                  ? "$danger10"
+                  : undefined,
               }}
             >
               {wordCount()}/{maxWords()}
@@ -187,7 +202,7 @@ const App: Component = () => {
           <Heading
             as="h3"
             css={{
-              color: atFifty() ? "$warning10" : "$neutral10",
+              color: atFifty() ? "$warning10" : "$neutral12",
             }}
           >
             Unique Words ({uniqueWordCount()})
@@ -195,6 +210,9 @@ const App: Component = () => {
 
           <OrderedList
             css={{
+              color: "$neutral11",
+              listStylePosition: "inside",
+              ml: 0,
               width: "$full",
               columns: 2,
               "@md": {
@@ -213,3 +231,7 @@ const App: Component = () => {
 };
 
 export default App;
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
