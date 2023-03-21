@@ -1,10 +1,4 @@
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-} from "solid-js";
+import { Component, createMemo, createSignal, For } from "solid-js";
 import {
   FormControl,
   FormHelperText,
@@ -23,7 +17,6 @@ import {
   AlertIcon,
   AlertTitle,
   AlertDescription,
-  HStack,
   Stack,
   Flex,
 } from "@hope-ui/solid";
@@ -38,9 +31,8 @@ const App: Component = () => {
   const words = createMemo(() => {
     return value()
       .trim()
-      .replace(/\.{3}/g, " ")
-      .replace(/[^a-zA-Z' ]/g, "")
-      .replace(/\s+/g, " ")
+      .replace(/[^a-zA-Z' ]/g, " ")
+      .replace(/(\s|\n)+/g, " ")
       .toLowerCase()
       .split(" ")
       .filter(Boolean);
