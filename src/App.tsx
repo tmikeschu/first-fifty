@@ -6,22 +6,45 @@ import {
   For,
 } from "solid-js";
 
-import logo from "./logo.svg";
-import styles from "./App.module.css";
+import {
+  FormControl,
+  FormHelperText,
+  FormLabel,
+  Heading,
+  Input,
+  Text,
+  VStack,
+  Textarea,
+  OrderedList,
+  ListItem,
+  FormErrorMessage,
+  Button,
+  Container,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  HStack,
+  Stack,
+  Flex,
+} from "@hope-ui/solid";
 
 const App: Component = () => {
   const [value, setValue] = createSignal("");
+  const [maxUniqueWords, setMaxUniqueWords] = createSignal(50);
+  const [maxWords, setMaxWords] = createSignal(200);
 
   const words = createMemo(() => {
     return value()
       .trim()
+      .replace(/\.{3}/g, " ")
       .replace(/[^a-zA-Z' ]/g, "")
       .replace(/\s+/g, " ")
       .toLowerCase()
       .split(" ")
       .filter(Boolean);
   });
-  const atMaxWordCount = createMemo(() => words().length === 200);
+  const atMaxWordCount = createMemo(() => words().length === maxWords());
   const endsWithSpace = createMemo(() => value().match(/(\s|\n)$/));
 
   const uniqWords = createMemo(() => {
@@ -31,68 +54,161 @@ const App: Component = () => {
 
   const wordCount = createMemo(() => words().length);
   const uniqueWordCount = createMemo(() => uniqWords().length);
-  const atFifty = createMemo(() => uniqueWordCount() > 50);
+  const atFifty = createMemo(() => uniqueWordCount() > maxUniqueWords());
 
   const [isDisabled, setIsDisabled] = createSignal(false);
   const [invalidAttempt, setInvalidAttempt] = createSignal("");
 
   return (
-    <div class={styles.App}>
-      <header>
-        <h1>First Fifty</h1>
-        <p>
-          Write 200 words, using only the <b>first fifty</b> words you write.
-        </p>
-      </header>
-      <textarea
-        rows="1"
-        class={styles.textarea}
-        disabled={isDisabled()}
-        value={value()}
-        onInput={(e) => {
-          if (atFifty()) {
-            const lastWord = (e.currentTarget.value.split(" ").pop() ?? "")
-              .replace(/[^a-zA-Z' ]/g, "")
-              .toLowerCase();
-            if (!uniqWords().some((w) => w.startsWith(lastWord))) {
-              e.currentTarget.value = value();
-              setInvalidAttempt(lastWord);
-              e.currentTarget.blur();
-            } else {
-              setInvalidAttempt("");
-              setValue(e.currentTarget.value);
-            }
-          } else {
-            setInvalidAttempt("");
-            setValue(e.currentTarget.value);
-          }
-          if (atMaxWordCount() && endsWithSpace()) {
-            setIsDisabled(true);
-            setValue((v) => v.trim());
-          }
+    <Container
+      centerContent
+      css={{
+        maxW: "640px",
+        w: "100%",
+        py: "16px",
+        px: "$2",
+        "@md": {
+          px: "$4",
+        },
+      }}
+    >
+      <VStack
+        gap="$4"
+        css={{
+          w: "100%",
         }}
-      />
-      {invalidAttempt() ? (
-        <p class={styles.invalidAttempt}>
-          <b>{invalidAttempt()}</b> doesn't match your first fifty words.
-        </p>
-      ) : null}
+      >
+        <VStack as="header">
+          <Heading
+            as="h1"
+            size="xl"
+            css={{
+              color: "$primary10",
+            }}
+          >
+            First Fifty
+          </Heading>
+          <Text size="sm" css={{ color: "$neutral9" }}>
+            Write <b>{maxWords()}</b> words, using the first{" "}
+            <b>{maxUniqueWords()}</b> words you write.
+          </Text>
+        </VStack>
 
-      <p classList={{ [styles.atMaxWordCount]: atMaxWordCount() }}>
-        Words {wordCount()}/200
-      </p>
-      {isDisabled() ? (
-        <button onClick={() => setIsDisabled(false)}>Revise</button>
-      ) : null}
-      <h3 classList={{ [styles.uniqueWordsAtCapacity]: atFifty() }}>
-        Unique Words ({uniqueWordCount()})
-      </h3>
-      <ol class={styles.wordList}>
-        <For each={uniqWords()}>
-          {(item) => <li class={styles.wordList__item}>{item}</li>}
-        </For>
-      </ol>
-    </div>
+        <Stack css={{ gap: "$2" }}>
+          <FormControl>
+            <FormLabel for="maxUniqueWords">Max unique words</FormLabel>
+            <Input
+              max={maxWords()}
+              id="maxUniqueWords"
+              type="number"
+              value={maxUniqueWords()}
+              onInput={(e) => setMaxUniqueWords(Number(e.currentTarget.value))}
+            />
+          </FormControl>
+
+          <FormControl>
+            <FormLabel for="maxWords">Target word count</FormLabel>
+            <Input
+              min={maxUniqueWords()}
+              id="maxWords"
+              type="number"
+              value={maxWords()}
+              onInput={(e) => setMaxWords(Number(e.currentTarget.value))}
+            />
+          </FormControl>
+        </Stack>
+
+        <FormControl>
+          <Textarea
+            css={{
+              h: "320px",
+              px: "8px",
+              py: "4px",
+              resize: "none",
+            }}
+            rows="1"
+            disabled={isDisabled()}
+            value={value()}
+            onInput={(e) => {
+              if (atFifty()) {
+                const lastWord = (e.currentTarget.value.split(" ").pop() ?? "")
+                  .replace(/[^a-zA-Z' ]/g, "")
+                  .toLowerCase();
+                if (!uniqWords().some((w) => w.startsWith(lastWord))) {
+                  e.currentTarget.value = value();
+                  setInvalidAttempt(lastWord);
+                  e.currentTarget.blur();
+                } else {
+                  setInvalidAttempt("");
+                  setValue(e.currentTarget.value);
+                }
+              } else {
+                setInvalidAttempt("");
+                setValue(e.currentTarget.value);
+              }
+              if (atMaxWordCount() && endsWithSpace()) {
+                setIsDisabled(true);
+                setValue((v) => v.trim());
+              }
+            }}
+          />
+          <Flex css={{ justifyContent: "flex-end", w: "$full" }}>
+            <FormHelperText
+              css={{
+                color: atMaxWordCount() ? "$success10" : undefined,
+              }}
+            >
+              {wordCount()}/{maxWords()}
+            </FormHelperText>
+          </Flex>
+          <FormErrorMessage></FormErrorMessage>
+        </FormControl>
+
+        {invalidAttempt() ? (
+          <Alert status="danger">
+            <AlertIcon mr="$2_5" />
+            <AlertTitle mr="$2_5">{invalidAttempt()}</AlertTitle>
+            <AlertDescription>
+              doesn't match your first fifty words.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
+        {isDisabled() ? (
+          <Button onClick={() => setIsDisabled(false)}>Revise</Button>
+        ) : null}
+
+        <VStack
+          css={{
+            width: "$full",
+            alignItems: "flex-start",
+          }}
+        >
+          <Heading
+            as="h3"
+            css={{
+              color: atFifty() ? "$warning10" : "$neutral10",
+            }}
+          >
+            Unique Words ({uniqueWordCount()})
+          </Heading>
+
+          <OrderedList
+            css={{
+              width: "$full",
+              columns: 2,
+              "@md": {
+                columns: 4,
+              },
+            }}
+          >
+            <For each={uniqWords()}>
+              {(item) => <ListItem>{item}</ListItem>}
+            </For>
+          </OrderedList>
+        </VStack>
+      </VStack>
+    </Container>
   );
 };
 
