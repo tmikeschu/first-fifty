@@ -31,7 +31,7 @@ const App: Component = () => {
   const words = createMemo(() => {
     return value()
       .trim()
-      .replace(/[^a-zA-Z' ]/g, " ")
+      .replace(/[^a-zA-Z’' ]/g, " ")
       .replace(/(\s|\n)+/g, " ")
       .toLowerCase()
       .split(" ")
