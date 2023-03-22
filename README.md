@@ -8,7 +8,7 @@ but the idea is to introduce an arbitrary constraint that lures your unique pref
 ![app preview](./src/assets/FirstFiftyScreenshot.png)
 
 
-Built with [Solid]([Solid Website](https://solidjs.com)) and [Hope UI](https://hope-ui.com/).
+Built with [Solid](https://solidjs.com) and [Hope UI](https://hope-ui.com/).
 
 ---
 
